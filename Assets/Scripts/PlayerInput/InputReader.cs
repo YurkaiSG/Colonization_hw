@@ -8,12 +8,16 @@ public class InputReader : MonoBehaviour
 
     public event Action<Vector2> Moved;
     public event Action<float> Zoomed;
+    public event Action LeftMouseButtonClicked;
+    public event Action RightMouseButtonClicked;
 
     private void Awake()
     {
         _playerInput = new PlayerInput();
         _playerInput.Player.Move.performed += OnMove;
         _playerInput.Player.Zoom.performed += OnZoom;
+        _playerInput.Player.MouseLeftClick.performed += OnLeftMouseButtonClick;
+        _playerInput.Player.MouseRightClick.performed += OnRightMouseButtonClick;
     }
 
     private void OnEnable()
@@ -36,5 +40,15 @@ public class InputReader : MonoBehaviour
     {
         float direction = context.action.ReadValue<float>();
         Zoomed?.Invoke(direction);
+    }
+
+    private void OnLeftMouseButtonClick(InputAction.CallbackContext context)
+    {
+        LeftMouseButtonClicked?.Invoke();
+    }
+
+    private void OnRightMouseButtonClick(InputAction.CallbackContext context)
+    {
+        RightMouseButtonClicked?.Invoke();
     }
 }

@@ -26,17 +26,20 @@ public class UnitMover : MonoBehaviour
 
     private void CheckForArrival()
     {
-        CurrentPosition = transform.position;
-        CurrentPosition.y = 0f;
+        if (CurrentTarget != Vector3.zero)
+        {
+            CurrentPosition = transform.position;
+            CurrentPosition.y = 0f;
         
-        if ((int)CurrentPosition.x == (int)CurrentTarget.x 
-            && (int)CurrentPosition.z == (int)CurrentTarget.z)
-            Arrived?.Invoke();
+            if ((int)CurrentPosition.x == (int)CurrentTarget.x 
+                && (int)CurrentPosition.z == (int)CurrentTarget.z)
+                Arrived?.Invoke();
+        }
     }
 
-    public void SetTarget(Transform targetPosition)
+    public void SetTarget(Vector3 targetPosition)
     {
-        CurrentTarget = targetPosition.position;
+        CurrentTarget = targetPosition;
         CurrentTarget.y = 0;
         _agent.SetDestination(CurrentTarget);
         _agent.isStopped = false;

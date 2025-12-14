@@ -11,11 +11,8 @@ public class AreaScanner : MonoBehaviour
     [SerializeField] private int _cooldown = 10;
 
     private int _firstScanDelay = 3;
-    private List<Collider> FindedResources;
     public bool CanScan { get; private set; }
-    public int ScannedAmount => FindedResources.Count;
-    public event Action ScanPerformed;
-
+    public event Action<List<Collider>> Scanned;
 
     private void Start()
     {
@@ -23,26 +20,10 @@ public class AreaScanner : MonoBehaviour
         StartCoroutine(StartDelayRountine());
     }
 
-    public Transform GetResourcePosition()
-    {
-        Transform resource = FindedResources[0].transform;
-        FindedResources.RemoveAt(0);
-        return resource;
-    }
-
     private void Scan()
     {
-        FindedResources = Physics.OverlapBox(transform.position, _scanningBoxAreaSize, Quaternion.identity, _layerMask).ToList();
-        SortByDistance();
+        Scanned?.Invoke(Physics.OverlapBox(transform.position, _scanningBoxAreaSize, Quaternion.identity, _layerMask).ToList());
         CanScan = false;
-        ScanPerformed?.Invoke();
-    }
-
-    private void SortByDistance()
-    {
-        FindedResources.Sort((x, y) => { 
-            return Vector3.Distance(transform.position, x.transform.position)
-            .CompareTo(Vector3.Distance(transform.position, y.transform.position)); });
     }
 
     private IEnumerator WaitRountine(int waitingTime)

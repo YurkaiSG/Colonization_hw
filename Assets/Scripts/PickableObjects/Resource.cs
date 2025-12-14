@@ -12,16 +12,20 @@ public class Resource : MonoBehaviour, IPickable
         Collider = GetComponent<Collider>();
     }
 
-    public void PickUp(Transform parent)
-    {
-        TogglePhysics();
-        transform.SetPositionAndRotation(parent.position, parent.rotation);
-        transform.SetParent(parent);
-    }
-
     private void TogglePhysics()
     {
         Rigidbody.isKinematic = !Rigidbody.isKinematic;
-        Collider.enabled = !Collider.enabled;
+        Collider.isTrigger = Collider.isTrigger;
+    }
+
+    private void DisableCollider()
+    {
+        Collider.enabled = false;
+    }
+
+    public void PickUp()
+    {
+        TogglePhysics();
+        DisableCollider();
     }
 }

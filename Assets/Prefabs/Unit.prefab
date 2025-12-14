@@ -297,6 +297,7 @@ GameObject:
   - component: {fileID: 249291518941518161}
   - component: {fileID: 7561513280003662005}
   - component: {fileID: 4911249434314886413}
+  - component: {fileID: 7668286560421127224}
   m_Layer: 0
   m_Name: Unit
   m_TagString: Untagged
@@ -374,8 +375,8 @@ Rigidbody:
   m_GameObject: {fileID: 9189668709882542678}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_Drag: 0.1
+  m_AngularDrag: 0.1
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -426,7 +427,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95ff3c27e8f187b4dac28d73eb6745fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pickUpPosition: {fileID: 5309974230547052597}
 --- !u!114 &4911249434314886413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -440,5 +440,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 16
-  CurrentTarget: {x: 0, y: 0, z: 0}
-  CurrentPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &7668286560421127224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9189668709882542678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6d3421eb7512cf47ab59c91547dea75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pickUpPosition: {fileID: 5309974230547052597}
