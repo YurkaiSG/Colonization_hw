@@ -1006,6 +1006,7 @@ MonoBehaviour:
   _unitPrefab: {fileID: 7561513280003662005, guid: c0ef4af0ffde0d742be6c92bf65e153c, type: 3}
   _isStartingBase: 0
   _startingUnitsAmount: 3
+  _isReadyForConstruction: 0
 --- !u!114 &6141253296868721551
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1018,7 +1019,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b79045b3d6c2924ca1c62f39224c1ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _storage: {fileID: 2370663089421052814}
   _constructionSitePrefab: {fileID: 7210395771102844132, guid: e63566e9039b165469c92efbf5dde546, type: 3}
+  _minUnitsForColonization: 2
   _groundLayerMask:
     serializedVersion: 2
     m_Bits: 64

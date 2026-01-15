@@ -12,7 +12,6 @@ public class BaseOperations : MonoBehaviour
     [SerializeField] private Unit _unitPrefab;
     [SerializeField] private bool _isStartingBase = false;
     [SerializeField] private int _startingUnitsAmount = 3;
-    [SerializeField] private int _minUnitsForColonization = 2;
 
     private BaseColonizator _colonizator;
     private Base _base;
@@ -23,7 +22,8 @@ public class BaseOperations : MonoBehaviour
     public State CurrentState { get; private set; }
 
     public event Action<Unit> UnitCreated;
-    public event Action<Transform> ConstructionReady;
+    public event Action<Transform> ColonizationReady;
+    public event Action<Transform> ColonizationPositionChanged;
     public bool _isReadyForConstruction = false;
 
     public enum State
@@ -45,21 +45,23 @@ public class BaseOperations : MonoBehaviour
     private void OnEnable()
     {
         _storage.AmountChanged += PerformStateOperation;
-        _colonizator.ConstructionSitePlaced += BeginConstruction;
+        _colonizator.ConstructionSitePlaced += BeginColonization;
         _colonizator.ConstructionSiteMoved += ChangeConstructionPosition;
+        _base.ColonizationFinished += EndConstruction;
     }
 
     private void OnDisable()
     {
         _storage.AmountChanged -= PerformStateOperation;
-        _colonizator.ConstructionSitePlaced -= BeginConstruction;
+        _colonizator.ConstructionSitePlaced -= BeginColonization;
         _colonizator.ConstructionSiteMoved -= ChangeConstructionPosition;
+        _base.ColonizationFinished -= EndConstruction;
     }
 
     private void Update()
     {
         if (_isReadyForConstruction && _isConstructionInProgress == false)
-            AttemptToColonize();
+            PerformStateOperation();
     }
 
     private void PerformStateOperation()
@@ -67,50 +69,47 @@ public class BaseOperations : MonoBehaviour
         switch (CurrentState)
         {
             case State.Normal:
-                if (CanAfford(_unitCost)) ExecuteNormalBehaviour();
+                ExecuteNormalBehaviour();
                 break;
             case State.Colonization:
-                if (CanAfford(_baseCost) && _isConstructionInProgress == false) ExecuteColonizationBehaviour();
+                ExecuteColonizationBehaviour();
                 break;
             default:
                 break;
         }
     }
 
-    private void BeginConstruction(Transform position)
+    private void BeginColonization(Transform position)
     {
         _isReadyForConstruction = true;
         _constructionSitePosition = position;
-        AttemptToColonize();
-    }
-
-    private void AttemptToColonize()
-    {
-        if (_base.ControlledUnitsCount >= _minUnitsForColonization)
-        {
-            CurrentState = State.Colonization;
-            PerformStateOperation();
-        }
+        CurrentState = State.Colonization;
+        PerformStateOperation();
     }
 
     private void ChangeConstructionPosition(Transform position)
     {
         _constructionSitePosition = position;
-        _isConstructionInProgress = true;
-        ConstructionReady?.Invoke(_constructionSitePosition);
+        ColonizationPositionChanged?.Invoke(_constructionSitePosition);
     }
 
     private void ExecuteNormalBehaviour()
     {
-        _storage.SpendResources(_unitCost);
-        SpawnUnit();
+        if (CanAfford(_unitCost))
+        {
+            _storage.SpendResources(_unitCost);
+            SpawnUnit();
+        }
     }
 
     private void ExecuteColonizationBehaviour()
     {
-        _storage.SpendResources(_baseCost);
-        _isConstructionInProgress = true;
-        ConstructionReady?.Invoke(_constructionSitePosition);
+        if (CanAfford(_baseCost) && _isConstructionInProgress == false)
+        {
+            _storage.SpendResources(_baseCost);
+            _isConstructionInProgress = true;
+            ColonizationReady?.Invoke(_constructionSitePosition);
+        }
     }
 
     private void SpawnUnit()
@@ -132,11 +131,10 @@ public class BaseOperations : MonoBehaviour
         }
     }
 
-    public void EndConstruction(Unit unit)
+    private void EndConstruction(Unit unit)
     {
         CurrentState = State.Normal;
         _isConstructionInProgress = false;
         _isReadyForConstruction = false;
-        _colonizator.TransferUnitToNewBase(unit);
     }
 }

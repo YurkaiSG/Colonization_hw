@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(AreaScannerData), typeof(BaseOperations))]
@@ -16,6 +17,7 @@ public class Base : MonoBehaviour
     public int ControlledUnitsCount => _controlledUnits.Count;
 
     public event Action<Resource> ResourceAdded;
+    public event Action<Unit> ColonizationFinished;
 
     private void Awake()
     {
@@ -26,15 +28,17 @@ public class Base : MonoBehaviour
     private void OnEnable()
     {
         _scannerData.ScanPerformed += CheckForIdleWorkers;
-        _baseOperations.UnitCreated += AssignNewUnitToBase;
-        _baseOperations.ConstructionReady += EnableConstructionStatus;
+        _baseOperations.UnitCreated += AssignUnitToBase;
+        _baseOperations.ColonizationReady += BeginColonization;
+        _baseOperations.ColonizationPositionChanged += ChangeColonizationPosition;
     }
 
     private void OnDisable()
     {
         _scannerData.ScanPerformed -= CheckForIdleWorkers;
-        _baseOperations.UnitCreated -= AssignNewUnitToBase;
-        _baseOperations.ConstructionReady -= EnableConstructionStatus;
+        _baseOperations.UnitCreated -= AssignUnitToBase;
+        _baseOperations.ColonizationReady -= BeginColonization;
+        _baseOperations.ColonizationPositionChanged -= ChangeColonizationPosition;
     }
 
     private void OnTriggerStay(Collider other)
@@ -45,10 +49,10 @@ public class Base : MonoBehaviour
                     ResourceAdded?.Invoke(unit.DropObject() as Resource);
     }
 
-    private void AssignNewUnitToBase(Unit unit)
+    private void AssignUnitToBase(Unit unit)
     {
         _controlledUnits.Add(unit);
-        unit.ResourceTaken += SendUnitToBase;
+        unit.ResourceTaken += ReturnUnitToBase;
         unit.ResourceDelivered += SelectNextWork;
         unit.ResourceNotFound += SendUnitToResource;
     }
@@ -56,7 +60,7 @@ public class Base : MonoBehaviour
     private void SelectNextWork(Unit unit)
     {
         if (_isConstructionInProgress)
-            SendUnitToNewBase(unit);
+            SendBuilder(unit);
         else
             SendUnitToResource(unit);
     }
@@ -72,26 +76,31 @@ public class Base : MonoBehaviour
             unit.SetNewTarget(resource);
     }
 
-    private void SendUnitToBase(Unit unit)
+    private void ReturnUnitToBase(Unit unit)
     {
         unit.SetNewTarget(_returnPoint);
     }
 
-    private void EnableConstructionStatus(Transform targetPosition)
+    private void BeginColonization(Transform targetPosition)
     {
-        _constructionPosition = targetPosition;
+        ChangeColonizationPosition(targetPosition);
         _isConstructionInProgress = true;
     }
 
-    private void SendUnitToNewBase(Unit unit)
+    private void ChangeColonizationPosition(Transform targetPosition)
     {
-        unit.ResourceTaken -= SendUnitToBase;
+        _constructionPosition = targetPosition;
+    }
+
+    private void SendBuilder(Unit unit)
+    {
+        unit.ResourceTaken -= ReturnUnitToBase;
         unit.ResourceDelivered -= SelectNextWork;
         unit.ResourceNotFound -= SendUnitToResource;
         unit.SetNewTarget(_constructionPosition);
         unit.CurrentState = Unit.States.Colonizing;
         _controlledUnits.Remove(unit);
-        _baseOperations.EndConstruction(unit);
+        ColonizationFinished?.Invoke(unit);
         _isConstructionInProgress = false;
     }
 
@@ -103,7 +112,7 @@ public class Base : MonoBehaviour
             {
                 if (_isConstructionInProgress)
                 {
-                    SendUnitToNewBase(unit);
+                    SendBuilder(unit);
                     return;
                 }
                 else
@@ -114,9 +123,9 @@ public class Base : MonoBehaviour
         }
     }
 
-    public void AddBuilderToBase(Unit unit)
+    public void TransferBuilderToBase(Unit unit)
     {
-        AssignNewUnitToBase(unit);
+        AssignUnitToBase(unit);
         unit.CurrentState = Unit.States.Idle;
     }
 }

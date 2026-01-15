@@ -45,7 +45,7 @@ public class BaseConstructionSite : MonoBehaviour
                 if (unit == _builder)
                 {
                     _canFinishBuilding = true;
-                    MakeAttemptToBuild();
+                    BuildBase();
                 }
             }
         }
@@ -71,17 +71,14 @@ public class BaseConstructionSite : MonoBehaviour
         _navMeshObstacle.enabled = state;
     }
 
-    private void MakeAttemptToBuild()
-    {
-        if (_canFinishBuilding && _builder != null)
-            BuildBase();
-    }
-
     private void BuildBase()
     {
-        _buildedBase = Instantiate(_basePrefab, transform.position, transform.rotation);
-        _buildedBase.AddBuilderToBase(_builder);
-        Destroy(gameObject);
+        if (_canFinishBuilding && _builder != null)
+        {
+            _buildedBase = Instantiate(_basePrefab, transform.position, transform.rotation);
+            _buildedBase.TransferBuilderToBase(_builder);
+            Destroy(gameObject);
+        }
     }
 
     public void PlaceConstructionSite()
@@ -94,7 +91,7 @@ public class BaseConstructionSite : MonoBehaviour
     public void SetBuilder(Unit unit)
     {
         _builder = unit;
-        MakeAttemptToBuild();
+        BuildBase();
     }
 
     public void ResetCollisionCounter()

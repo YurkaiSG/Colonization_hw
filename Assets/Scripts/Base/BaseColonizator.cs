@@ -2,13 +2,17 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Base))]
 public class BaseColonizator : MonoBehaviour, ISelectable, ISelectableAction
 {
+    [SerializeField] private BaseStorage _storage;
     [SerializeField] private BaseConstructionSite _constructionSitePrefab;
+    [SerializeField] private int _minUnitsForColonization = 2;
     [SerializeField] private LayerMask _groundLayerMask;
 
     private BaseConstructionSite _preview;
     private BaseConstructionSite _placedConstructionSite;
+    private Base _base;
     private Camera _camera;
     private Ray _ray;
     private RaycastHit _hit;
@@ -26,6 +30,17 @@ public class BaseColonizator : MonoBehaviour, ISelectable, ISelectableAction
         IsSelected = false;
         IsConstructing = false;
         _camera = Camera.main;
+        _base = GetComponent<Base>();
+    }
+
+    private void OnEnable()
+    {
+        _base.ColonizationFinished += TransferUnitToNewBase;
+    }
+
+    private void OnDisable()
+    {
+        _base.ColonizationFinished -= TransferUnitToNewBase;
     }
 
     private void Update()
@@ -40,6 +55,13 @@ public class BaseColonizator : MonoBehaviour, ISelectable, ISelectableAction
 
         if (Physics.Raycast(_ray, out _hit, _rayMaxDistance, _groundLayerMask))
             _preview.transform.position = _hit.point;
+    }
+
+    private void TransferUnitToNewBase(Unit unit)
+    {
+        _placedConstructionSite.SetBuilder(unit);
+        _placedConstructionSite = null;
+        IsConstructing = false;
     }
 
     public void Select()
@@ -67,34 +89,27 @@ public class BaseColonizator : MonoBehaviour, ISelectable, ISelectableAction
 
     public void ExecuteSelectedObjectAction()
     {
-        if (IsConstructing)
-        {
-            MovePreviewToMousePosition();
-        }
+        MovePreviewToMousePosition();
 
         if (_preview.TryPlace())
         {
-            IsConstructing = true;
-
             if (_placedConstructionSite == null)
             {
-                _placedConstructionSite = Instantiate(_constructionSitePrefab, _hit.point, _preview.transform.rotation);
-                _placedConstructionSite.PlaceConstructionSite();
-                ConstructionSitePlaced?.Invoke(_placedConstructionSite.transform);
+                if (_base.ControlledUnitsCount >= _minUnitsForColonization)
+                {
+                    IsConstructing = true;
+                    _placedConstructionSite = Instantiate(_constructionSitePrefab, _hit.point, _preview.transform.rotation);
+                    _placedConstructionSite.PlaceConstructionSite();
+                    ConstructionSitePlaced?.Invoke(_placedConstructionSite.transform);
+                }
             }
             else
             {
+                IsConstructing = true;
                 _placedConstructionSite.transform.position = _hit.point;
                 _placedConstructionSite.PlaceConstructionSite();
                 ConstructionSiteMoved?.Invoke(_placedConstructionSite.transform);
             }
         }
-    }
-
-    public void TransferUnitToNewBase(Unit unit)
-    {
-        IsConstructing = false;
-        _placedConstructionSite.SetBuilder(unit);
-        _placedConstructionSite = null;
     }
 }
